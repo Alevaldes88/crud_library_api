@@ -14,6 +14,11 @@ async def get_books():
 async def get_book_by_id(id: int):
     return await book_controllers.get_a_book_by_id(id)
 
+# Borrar un libro por id http://localhost:800/books/{id}
+@router.delete("/{id}", status_code=200)
+async def delete_book(id: int):
+    return await book_controllers.delete_a_book(id)
+
 
 
 

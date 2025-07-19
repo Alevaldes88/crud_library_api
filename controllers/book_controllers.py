@@ -43,5 +43,23 @@ async def get_a_book_by_id(id: int):
     finally:
         conn.close()
 
+async def delete_a_book(id: int):
+    book = await get_a_book_by_id(id)
+    if book:
+        # puedo borrar
+        try:
+            conn = await get_conexion()
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                await cursor.execute("DELETE FROM library.books WHERE id=%s", (id,))
+                # tenemos que confirmar la consulta de la linea anterior
+                await conn.commit()
+                return {'msg': f'El libro con id {id} ha sido eliminado existosamente', 'status': True}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f'Error: {str(e)}')
+        finally:
+            conn.close()
+    else:
+        raise HTTPException(
+            status_code=404, detail=f'El libro con id {id} no  se ha encontrado')
 
     
