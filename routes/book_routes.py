@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from controllers import book_controllers
-from models.book_models import Book
+from models.book_models import BookCreate
 router = APIRouter()
 
 
@@ -18,6 +18,11 @@ async def get_book_by_id(id: int):
 @router.delete("/{id}", status_code=200)
 async def delete_book(id: int):
     return await book_controllers.delete_a_book(id)
+
+# Crear un libro http://localhost:800/books
+@router.post('/', status_code=201)
+async def create_book(book: BookCreate):
+    return await book_controllers.create_a_book(book)
 
 
 
