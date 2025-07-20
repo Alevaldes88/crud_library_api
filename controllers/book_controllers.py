@@ -63,6 +63,12 @@ async def delete_a_book(id: int):
         raise HTTPException(
             status_code=404, detail=f'El libro con id {id} no  se ha encontrado')
 
+from fastapi import HTTPException
+import aiomysql
+from db.config import get_conexion
+from models.book_models import BookCreate
+from controllers.book_controllers import get_a_book_by_id
+
 async def create_a_book(book: BookCreate):
     try:
         conn = await get_conexion()
@@ -101,6 +107,46 @@ async def create_a_book(book: BookCreate):
         raise  # Re-lanzamos si ya fue lanzado antes
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+    finally:
+        conn.close()
+
+
+async def update_a_book(id: int, book: Book):
+    if id != book.id:
+        raise HTTPException(status_code=400, detail="Los ID no coinciden")
+    try:
+        conn = await get_conexion()
+        async with conn.cursor(aiomysql.DictCursor) as cursor:
+            await cursor.execute("""
+                                UPDATE library.books
+                                SET title = %s,
+                                    author = %s,
+                                    isbn = %s,
+                                    year = %s,
+                                    publisher = %s,
+                                    genre = %s,
+                                    language = %s,
+                                    status = %s,
+                                    pages = %s
+                                WHERE id = %s
+                            """, (
+                                book.title,
+                                book.author,
+                                book.isbn,
+                                book.year,
+                                book.publisher,
+                                book.genre,
+                                book.language,
+                                book.status,
+                                book.pages,
+                                id
+                                ))
+            await conn.commit()
+            # ya tenemos el id de producto lo que tenemos que hacer o responder con el producto actualizado.
+            book = await get_a_book_by_id(id)
+            return {"msg": 'Libro actualizado correctamente', "item": book}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail= f"Error: {str(e)}")
     finally:
         conn.close()
 
