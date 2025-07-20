@@ -1,6 +1,7 @@
 from db.config import get_conexion
 from fastapi import HTTPException
 import aiomysql
+from models.book_models import Book, BookCreate
 
 async def get_all_books():
     try:
@@ -62,4 +63,45 @@ async def delete_a_book(id: int):
         raise HTTPException(
             status_code=404, detail=f'El libro con id {id} no  se ha encontrado')
 
-    
+async def create_a_book(book: BookCreate):
+    try:
+        conn = await get_conexion()
+        async with conn.cursor(aiomysql.DictCursor) as cursor:
+            # Validar duplicado por ISBN
+            await cursor.execute("SELECT * FROM library.books WHERE isbn = %s", (book.isbn,))
+            existe = await cursor.fetchone()
+            if existe:
+                raise HTTPException(status_code=400, detail="Ya existe un libro con ese ISBN.")
+
+            # Insertar el libro
+            await cursor.execute("""
+                INSERT INTO library.books 
+                (title, author, isbn, year, publisher, genre, language, status, pages)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                book.title,
+                book.author,
+                book.isbn,
+                book.year,
+                book.publisher,
+                book.genre,
+                book.language,
+                book.status,
+                book.pages
+            ))
+
+            await conn.commit()
+            nuevo_id = cursor.lastrowid
+
+        # Obtener y retornar el nuevo libro
+        libro = await get_a_book_by_id(nuevo_id)
+        return {"msg": "Libro insertado correctamente", "item": libro}
+
+    except HTTPException:
+        raise  # Re-lanzamos si ya fue lanzado antes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+    finally:
+        conn.close()
+
+
