@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from controllers import book_controllers
-from models.book_models import BookCreate
+from models.book_models import Book, BookCreate
 router = APIRouter()
 
 
@@ -24,7 +24,10 @@ async def delete_book(id: int):
 async def create_book(book: BookCreate):
     return await book_controllers.create_a_book(book)
 
-
+# Actualizar un libro http://localhost:800/books/{id}
+@router.put('/{id}', status_code=200)
+async def update_book(id: int, book: Book):
+    return await book_controllers.update_a_book(id, book)
 
 
 
