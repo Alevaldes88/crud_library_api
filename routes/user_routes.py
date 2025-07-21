@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from controllers import user_controllers
-from models.user_models import User, UserCreate
+from models.user_models import User
 
 
 router = APIRouter()
@@ -12,8 +12,8 @@ async def get_all():
 
 # Obtener usuarios por id http://localhost:8000/users/{user_id}
 @router.get('/{user_id}', status_code=200)
-async def get_user_id(user_id: int):
-    return await user_controllers.get_user_id(user_id)
+async def get_user_by_id(user_id: int):
+    return await user_controllers.get_user_by_id(user_id)
 
 
 # Borrar un usuario por id http://localhost:800/books/{user_id}
